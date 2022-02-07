@@ -5,26 +5,15 @@
 
 namespace plt = matplotlibcpp;
 
-//#define USE_OSQP
-#ifdef USE_OSQP
-
-#include <Eigen/Sparse>
-#include <OsqpEigen/OsqpEigen.h>
-
-#endif
-
 #include <chrono>
 
-using MatXd = Eigen::MatrixXd;
-using VecXd = Eigen::VectorXd;
-
-VecXd RunMPC(unsigned int N, VecXd &init_x, MatXd &A, MatXd &B,
-             MatXd &Q, MatXd &R, MatXd &F) {
+Eigen::VectorXd RunMPC(unsigned int N, Eigen::VectorXd &init_x, Eigen::MatrixXd &A, Eigen::MatrixXd &B,
+                       Eigen::MatrixXd &Q, Eigen::MatrixXd &R, Eigen::MatrixXd &F) {
 
     unsigned int num_state = init_x.rows();
     unsigned int num_control = B.cols();
 
-    MatXd C, M;
+    Eigen::MatrixXd C, M;
     C.resize((N + 1) * num_state, num_control * N);
     C.setZero();
     M.resize((N + 1) * num_state, num_state);
@@ -59,17 +48,15 @@ VecXd RunMPC(unsigned int N, VecXd &init_x, MatXd &A, MatXd &B,
         R_bar.block(i * num_control, i * num_control, num_control, num_control) = R;
     }
 
-
     Eigen::MatrixXd G = M.transpose() * Q_bar * M;
     Eigen::MatrixXd E = C.transpose() * Q_bar * M;
     Eigen::MatrixXd H = C.transpose() * Q_bar * C + R_bar;
 
     return H.inverse() * (-E * init_x);
-
 }
 
 int main() {
-    MatXd A, B;
+    Eigen::MatrixXd A, B;
     A.resize(2, 2);
     B.resize(2, 1);
     A << 1, 0.1, 0, 2;
@@ -87,7 +74,7 @@ int main() {
     F << 2, 0, 0, 2;
 
     const unsigned int N = 3;
-    VecXd init_x;
+    Eigen::VectorXd init_x;
     init_x.resize(2, 1);
     init_x << 5.0, 5.0;
 
@@ -99,10 +86,10 @@ int main() {
     for (unsigned int i = 0; i < 200; ++i) {
         std::cout << "error: " << init_x.transpose() << std::endl;
         std::chrono::steady_clock::time_point start_time = std::chrono::steady_clock::now();
-        VecXd control = RunMPC(N, init_x, A, B, Q, R, F);
+        Eigen::VectorXd control = RunMPC(N, init_x, A, B, Q, R, F);
         std::chrono::steady_clock::time_point end_time = std::chrono::steady_clock::now();
         std::chrono::duration<double> used_time = (end_time - start_time);
-        std::cout << "one mpc use time(ms): " << used_time.count() * 1000 << std::endl;
+        std::cout << "Once mpc use time(ms): " << used_time.count() * 1000 << std::endl;
         init_x = A * init_x + B * control.x();
         state_0.emplace_back(init_x.x());
         time.emplace_back(0.1 * (i + 1));
