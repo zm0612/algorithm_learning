@@ -128,11 +128,12 @@ int main() {
                      << q.x() << " " << q.y() << " " << q.z() << " " << q.w() << std::endl;
     }
 
-    for (const auto & gps_measure : gps_measures_vec) {
+    for (const auto &gps_measure: gps_measures_vec) {
         Eigen::Quaterniond q(gps_measure.local_orientation);
         gps_measure_file << std::setprecision(15) << static_cast<double >(gps_measure.timestamp_) / 1.0e6 << " "
-                     << gps_measure.local_xyz_.x() << " " << gps_measure.local_xyz_.y() << " " << gps_measure.local_xyz_.z() << " "
-                     << q.x() << " " << q.y() << " " << q.z() << " " << q.w() << std::endl;
+                         << gps_measure.local_xyz_.x() << " " << gps_measure.local_xyz_.y() << " "
+                         << gps_measure.local_xyz_.z() << " "
+                         << q.x() << " " << q.y() << " " << q.z() << " " << q.w() << std::endl;
     }
 
     for (unsigned int i = 0; i < gps_measures_vec.size() - 1; ++i) {
@@ -182,11 +183,11 @@ int main() {
         ));
 
         // GPS测量的因子，包括位置和姿态
-        double gps_posi_noise = pre_integration_optimization_test.gps_posi_noise_std_;
-        double gps_rot_noise = pre_integration_optimization_test.gps_orientation_noise_std_ * 6.0;
+        double gps_posi_noise = pre_integration_optimization_test.gps_posi_noise_std_ / 5.0;
+        double gps_rot_noise = pre_integration_optimization_test.gps_orientation_noise_std_;
         auto gps_measure_noise = noiseModel::Diagonal::Sigmas(
-                (Vector(6) << gps_posi_noise, gps_posi_noise, gps_posi_noise,
-                        gps_rot_noise, gps_rot_noise, gps_rot_noise).finished());
+                (Vector(6) << gps_rot_noise, gps_rot_noise, gps_rot_noise,
+                        gps_posi_noise, gps_posi_noise, gps_posi_noise).finished());
         Rot3 gps_prior_rotation(SO3::FromMatrix(gps_measures_vec[i].local_orientation));
         Point3 gps_prior_point(gps_measures_vec[i].local_xyz_);
         Pose3 gps_prior_pose(gps_prior_rotation, gps_prior_point);
