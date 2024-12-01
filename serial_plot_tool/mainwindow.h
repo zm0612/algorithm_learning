@@ -49,10 +49,10 @@ private slots:
     void on_SerialParityComboBox_currentTextChanged(const QString &arg1);
 
 private:
-    enum SerialPortDataType : uint8_t{
-        Position = 0,
-        Velocity = 1,
-        InValid = 255
+    enum SerialPortDataType : int8_t{
+        Position = '0',
+        Velocity = '1',
+        InValid = -1
     };
 
 private:
@@ -88,10 +88,12 @@ private:
     bool is_display_velocity_{false};
 
     int time_interval_replot_{20};
-    int position_line_width_{5};
-    int velocity_line_width_{5};
+    int position_line_width_{2};
+    int velocity_line_width_{2};
     double retain_data_duration_{50};
     double plot_data_duration_{15};
+
+    uint8_t receive_state_ = 0;
 
     std::chrono::steady_clock::time_point start_timestamp_;
 };

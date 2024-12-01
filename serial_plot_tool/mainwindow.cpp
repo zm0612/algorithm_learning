@@ -250,7 +250,6 @@ void MainWindow::on_SerialPortsComboBox_currentTextChanged(const QString &arg1)
 
 void MainWindow::ReceiveSerialData(){
     static std::vector<char> data_segment;
-    static uint8_t receive_state = 0;
 
     if(!serial_port_){
         return;
@@ -259,58 +258,64 @@ void MainWindow::ReceiveSerialData(){
     const QByteArray data_array = serial_port_->readAll();
 
     for (const auto data : data_array) {
-        if(receive_state == 0){
+        if(receive_state_ == 0){
             data_segment.clear();
-            if(data == 'D'){
-                receive_state = 1; // have received start char 'D'
+            if(data == 'S'){
+                receive_state_ = 1; // have received start char 'D'
             } else {
-                receive_state = 0;
+                receive_state_ = 0;
             }
-        } else if (receive_state == 1) {
-            if(data == 'A'){
-                receive_state = 2; // have received start char 'A'
-            } else {
-                receive_state = 0;
-            }
-        } else if (receive_state == 2) {
+        } else if (receive_state_ == 1) {
             if(data == 'T'){
-                receive_state = 3; // have received start char 'T'
-            }else {
-                receive_state = 0;
+                receive_state_ = 2; // have received start char 'A'
+            } else {
+                receive_state_ = 0;
             }
-        }else if (receive_state == 3) {
+        } else if (receive_state_ == 2) {
             if(data == 'A'){
-                receive_state = 4; // have received start char 'A'
+                receive_state_ = 3; // have received start char 'T'
             }else {
-                receive_state = 0;
+                receive_state_ = 0;
             }
-        } else if (receive_state >= 4 && receive_state <= 8) {
+        }else if (receive_state_ == 3) {
+            if(data == 'R'){
+                receive_state_ = 4; // have received start char 'A'
+            }else {
+                receive_state_ = 0;
+            }
+        } else if (receive_state_ == 4) {
+            if(data == 'T'){
+                receive_state_ = 5; // have received start char 'A'
+            }else {
+                receive_state_ = 0;
+            }
+        }  else if (receive_state_ >= 5 && receive_state_ <= 9) {
             data_segment.push_back(data); // receive data
-            receive_state++;
-        } else if (receive_state == 9){
+            receive_state_++;
+        } else if (receive_state_ == 10){
             if(data == 'E'){
-                receive_state = 10; // have received stop char 'E'
+                receive_state_ = 11; // have received stop char 'E'
             } else {
                 data_segment.clear();
-                receive_state = 0;
+                receive_state_ = 0;
             }
-        } else if (receive_state == 10) {
+        } else if (receive_state_ == 11) {
             if(data == 'N'){
-                receive_state = 11; // have received stop char 'N'
+                receive_state_ = 12; // have received stop char 'N'
             } else {
                 data_segment.clear();
-                receive_state = 0;
+                receive_state_ = 0;
             }
-        } else if (receive_state == 11) {
+        } else if (receive_state_ == 12) {
             if(data == 'D'){
-                receive_state = 12; // have received stop char 'D'
+                receive_state_ = 13; // have received stop char 'D'
             } else {
                 data_segment.clear();
-                receive_state = 0;
+                receive_state_ = 0;
             }
         }
 
-        if(receive_state < 12){
+        if(receive_state_ < 13){
             continue;
         }
 
@@ -319,7 +324,7 @@ void MainWindow::ReceiveSerialData(){
             continue;
         }
 
-        receive_state = 0; // reset receive status
+        receive_state_ = 0; // reset receive status
 
         std::pair<MainWindow::SerialPortDataType, float> result{MainWindow::SerialPortDataType::InValid, 0.0f};
 
@@ -368,10 +373,10 @@ std::pair<MainWindow::SerialPortDataType, float> MainWindow::ParseSerialPortData
     }
 
     float result;
-    if((uint8_t)data[0] == (uint8_t)SerialPortDataType::Position){
+    if(data[0] == SerialPortDataType::Position){
         result=*((float *)(&data[1]));
         return {SerialPortDataType::Position, result};
-    } else if ((uint8_t)data[0] == (uint8_t)SerialPortDataType::Velocity) {
+    } else if (data[0] == SerialPortDataType::Velocity) {
         result=*((float *)(&data[1]));
         return {SerialPortDataType::Velocity, result};
     } else {
