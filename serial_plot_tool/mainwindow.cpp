@@ -68,11 +68,11 @@ void MainWindow::CustomReplot(){
         return;
     }
 
-    if(position_data_vec_.size() >= 2){
+    if(position_data_vec_.size() >= 2 && is_display_position_){
         position_data_valid = true;
     }
 
-    if(velocity_data_vec_.size() >= 2){
+    if(velocity_data_vec_.size() >= 2 && is_display_velocity_){
         velocity_data_valid = true;
     }
 
@@ -98,7 +98,7 @@ void MainWindow::CustomReplot(){
     } else if(velocity_data_valid){
         min_y = *min_max_velocity.first;
         max_y = *min_max_velocity.second;
-        max_time_s = position_time_s_vec_.back();
+        max_time_s = velocity_time_s_vec_.back();
     } else {
         return;
     }
@@ -347,7 +347,6 @@ void MainWindow::ReceiveSerialData(){
                 position_data_vec_.pop_front();
                 position_time_s_vec_.pop_front();
             }
-
             if(is_display_position_){
                 ui->SerialPortDataTextEdit->appendPlainText(QString("pos: ") + QString::number(result.second, 'f', 3));
             }
